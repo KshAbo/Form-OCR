@@ -2,7 +2,6 @@ const express = require("express")
 const path = require("path")
 const ImageProcessor = require("./ImageProcessor")
 
-// const ImageProcessor = require('./ImageOCR')
 const app = express()
 const PORT = 8000;
 
@@ -14,7 +13,7 @@ app.use(express.static(path.join(__dirname, '/uploads')))
 
 app.use('/process', ImageProcessor);
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'Form', 'index.html'))
+    res.sendFile(path.join(__dirname, 'Form', 'index1.html'))
 })
 
 app.post("/submit",(req,res)=>{
