@@ -2,6 +2,7 @@ const express = require("express")
 const path = require("path")
 const ImageProcessor = require("./ImageProcessor")
 
+// const ImageProcessor = require('./ImageOCR')
 const app = express()
 const PORT = 8000;
 
