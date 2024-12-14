@@ -4,12 +4,11 @@ const multer = require('multer');
 const tesseract = require('tesseract.js')
 const path = require('path');
 const fs = require('fs')
-
 const sharp = require('sharp')
 
-const data = require('./data.json')
 
 const BUFFER_PIXEL = 5;
+
 // import data from './data.json' with { type: 'json' };
 
 // const storage = multer.diskStorage({
@@ -21,33 +20,23 @@ const BUFFER_PIXEL = 5;
 //     }
 // });
 // const upload = multer({storage: storage});
+
 const upload = multer({dest: 'uploads/'})
 
 async function Worker(location, rect){
     const worker = await tesseract.createWorker("eng");
     let rectangle = {left: rect.x, top: rect.y, width: rect.width, height: rect.height};
     const {data: {text}} = await worker.recognize(location, {rectangle})
-    // console.log(text);
     await worker.terminate();
     return text;
 }
 
-
-async function cropImage(imagePath, outputPath, cropCoordinates) {
-    const { x, y, width, height } = cropCoordinates;
-
-    await sharp(imagePath)
-        .extract({ left: x, top: y, width, height }) // Crop the image
-        .toFile(outputPath); // Save the cropped image
-
-    console.log("Cropped image saved to:", outputPath);
-}
-
 async function GetScanRegion(location){
+
     const worker = await tesseract.createWorker("eng", 1, {
         logger: m => console.log(m),
     });  
-    // const { data: { text } } = await worker.recognize(location);
+
     let rectangles = [];
 
     const result = await worker.recognize(location);
@@ -55,18 +44,12 @@ async function GetScanRegion(location){
     for(const property in data){
         wordMatch.push(data[property].split(" ")[0]);
     }
-    // const rectangles = result.data.words.map((word) => ({
-    //     text: word.text,
-    //     x: word.bbox.x0,
-    //     y: word.bbox.y0,
-    //     width: word.bbox.x1 - word.bbox.x0,
-    //     height: word.bbox.y1 - word.bbox.y0,
-    // })); 
+    console.log(result.data.text);
 
     for(const word in result.data.words){
-        let prop;
         for(const property in data){
             if(data[property].split(" ")[0] === result.data.words[word].text){
+                let prop;
                 prop = property;
                 const rectangle = {
                     text: result.data.words[word].text,
@@ -123,13 +106,14 @@ async function GetScanRegion(location){
     return rectangles;
 }
 
+
 async function drawRectangles(imagePath, rectangles, outputPath) {
     const svgRectangles = rectangles
         .map(
             (rect) => `
             <rect x="${rect.x}" y="${rect.y}" width="${rect.width}" height="${rect.height}" 
             fill="none" stroke="blue" stroke-width="1" />
-            <text x="${rect.x + 2}" y="${rect.y - 2}" fill="red" font-size="10">${rect.text}</text>
+            <text x="${rect.x + 2}" y="${rect.y - 2}" fill="blue" font-size="10">${rect.text}</text>
             `
         )
         .join("");
@@ -139,6 +123,7 @@ async function drawRectangles(imagePath, rectangles, outputPath) {
             (rect) => `
             <rect x="${rect.search.x}" y="${rect.search.y}" width="${rect.search.width}" height="${rect.search.height}" 
             fill="none" stroke="red" stroke-width="1" />
+            <text x="${rect.x + 2}" y="${rect.y - 2}" fill="blue" font-size="10">${rect.text}</text>
             `
         )
         .join("");
@@ -158,50 +143,18 @@ async function drawRectangles(imagePath, rectangles, outputPath) {
     console.log("Image with rectangles saved to:", outputPath);
 }
 
-async function drawRectangle(imagePath, rectangle, outputPath) {
-    const svgRectangle = `<rect x="${rectangle.x}" y="${rectangle.y}" width="${rectangle.width}" height="${rectangle.height}" 
-    fill="none" stroke="blue" stroke-width="1" />
-        <text x="${rectangle.x + 2}" y="${rectangle.y - 2}" fill="red" font-size="10">${rectangle.text}</text>`
 
-    const svgRectangle1 = `<rect x="${rectangle.search.x}" y="${rectangle.search.y}" width="${rectangle.search.width}" height="${rectangle.search.height}" 
-    fill="none" stroke="red" stroke-width="1" />`
 
-    const {width, height} = await sharp(imagePath).metadata();
-    const svgOverlay = `
-        <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-        ${svgRectangle}
-        ${svgRectangle1}
-        </svg>
-        `;
-
-    await sharp(imagePath)
-        .composite([{ input: Buffer.from(svgOverlay), blend: "over" }])
-        .toFile(outputPath);
-
-    console.log("Image with rectangles saved to:", outputPath);
-}
 
 router.post('/', upload.single('processImage'), (req, res) => {     // POST '\process'
+
+    data = req.jsondata;
     console.log(req.file);
     const loc = path.resolve(__dirname, req.file.path);
     console.log(loc);
-    // GetScanRegion(loc).then((result) => {
-    //     text = result;
-    // }).then(() => {
-    //     let formdatTa = {}
-    //     for(const property in data){
-    //         let scanner = `${data[property]}`;
-    //         scanner = "\(" + scanner + "\)\(\\W*\)\(\[a-zA-Z0-9#-/@ \]*\)"
-    //         const regex = RegExp(scanner)
-    //         let value = regex.exec(text)[3]
-    //         formdata[`${property}`] = value
-    //         console.log(formdata[`${property}`])
-    //     }
-    //     res.json(formdata)
-    // })
     GetScanRegion(loc)
         .then((rectangles) => {
-            drawRectangles(loc, rectangles, "/home/Abo/Pictures/Screenshots/damn.png");
+            drawRectangles(loc, rectangles, path.join(__dirname, "uploads", "damn"));
             let formData = {}
             const promises = rectangles.map((rect, i) => {
                 const rectangle = {
@@ -211,30 +164,20 @@ router.post('/', upload.single('processImage'), (req, res) => {     // POST '\pr
                     height: rect.search.height,
                 };
 
-                // Draw the rectangle
-                drawRectangle(loc, rect, "/home/Abo/Pictures/Screenshots/damn.png");
-
-                // Crop the image
-                cropImage(loc, `/home/Abo/Pictures/Screenshots/damn${i}.png`, rectangle);
-
-                // Process the cropped region
                 return Worker(loc, rectangle).then((text) => {
-                    const regex = RegExp(`(${rect.ogText}[\n|[ ]*)([A-Za-z0-9@#*/ ]*)`);
-                    const value = regex.exec(text) ? regex.exec(text)[2] : " ";
+                    const regex = RegExp(`(${rect.ogText}[\n|:[ ]*)([A-Za-z0-9@#*/, ]*)`);
+                    console.log(regex.exec(text));
+                    const value = regex.exec(text) ? regex.exec(text)[2] : " ";     //If the regex.exec() returns null, we give out empty string
                     formData[`${rect.property}`] = value;
                 });
-            });
+           });
 
-            console.log(rectangles[8]);
             return Promise.all(promises).then(() => formData);
         })
         .then((formData) => {
             console.log(formData)
             res.json(formData);
         })
-
-
-        
 });
 
 module.exports = router
