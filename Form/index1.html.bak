@@ -64,7 +64,6 @@
             </div>
         </section>
 
-        <script src="FieldsFiller.js"></script>
 
         <script>
             document.addEventListener("DOMContentLoaded", () => {
