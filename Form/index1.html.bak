@@ -39,27 +39,22 @@
                 <div class="input-box address">
                     <label>Address</label>
                     <input type="text" name="Address" placeholder="Enter street address" required />
-                    <input type="text" placeholder="Enter street address line 2" required />
-                    <!-- Residence field moved here, above the country field -->
-                    <input type="text" placeholder="Enter residence type" required />
-
-                    <div class="column">
-                        <input type="text" placeholder="Enter country" required />
-                        <input type="text" placeholder="Enter city" required />
-                    </div>
-                    <div class="column">
-                        <input type="text" placeholder="Enter state" required />
-                        <input type="number" placeholder="Enter postal code" required />
+                        <label>Country</label>
+                        <input type="text" name="Country" placeholder="Enter country" required />
+                        <label>City</label>
+                        <input type="text" name="City" placeholder="Enter city" required />
+                        <label>State</label>
+                        <input type="text" "State" placeholder="Enter state" required />
+                        <label>Postal Code</label>
+                        <input type="number" name="POSTAL" placeholder="Enter postal code" required />
                     </div>
                 </div>
 
-                <!-- Submit Button Styled Like Upload Button -->
                 <div class="submit-container">
                     <button type="submit" value="submit" class="button submit-button">Submit</button>
                 </div>
             </form>
 
-            <!-- Browse and Upload Buttons next to each other -->
             <div class="file-upload-container">
                 <form id="uploadForm" method="POST" enctype="multipart/form-data" class="file-upload-form">
                     <label for="file" class="file-upload-button">Browse</label>
@@ -85,6 +80,7 @@
                 }
             });
 
+            //Fill form when user submits an image
             document.getElementById("uploadForm").addEventListener("submit", (e) => {
                 e.preventDefault(); // Prevent form's default behavior
 

@@ -81,6 +81,7 @@
         </script>
 
         <script>
+            //File form when the user submits the image
             document.getElementById("uploadForm").addEventListener("submit", (e) => {
                 e.preventDefault();
 

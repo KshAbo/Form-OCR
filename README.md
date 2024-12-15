@@ -2,7 +2,7 @@
 
 The project uses the Tesseract OCR to scan a pre-filled Web Form and extract data of the fields in the form, to then fill the present empty form.
 
-## Initialization
+## Initialization/Installation
 
 Clone the repository into your local computer with the command 
 

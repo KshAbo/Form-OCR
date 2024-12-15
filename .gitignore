@@ -1,3 +1,4 @@
 uploads/
 node_modules/
 /eng.traineddata
+/hin.traineddata
